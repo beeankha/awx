@@ -1066,7 +1066,7 @@ class BaseOAuth2TokenSerializer(BaseSerializer):
             if word not in self.ALLOWED_SCOPES:
                 return False
         return True
-            
+
     def validate_scope(self, value):
         if not self._is_valid_scope(value):
             raise serializers.ValidationError(_(
@@ -1082,7 +1082,7 @@ class BaseOAuth2TokenSerializer(BaseSerializer):
             raise PermissionDenied(str(e))
 
 
-class UserAuthorizedTokenSerializer(BaseOAuth2TokenSerializer):  
+class UserAuthorizedTokenSerializer(BaseOAuth2TokenSerializer):
 
     class Meta:
         extra_kwargs = {
@@ -1134,7 +1134,7 @@ class OAuth2TokenSerializer(BaseOAuth2TokenSerializer):
 class OAuth2TokenDetailSerializer(OAuth2TokenSerializer):
 
     class Meta:
-        read_only_fields = ('*', 'user', 'application')       
+        read_only_fields = ('*', 'user', 'application')
 
 
 class UserPersonalTokenSerializer(BaseOAuth2TokenSerializer):
@@ -1154,9 +1154,9 @@ class UserPersonalTokenSerializer(BaseOAuth2TokenSerializer):
 
 
 class OAuth2ApplicationSerializer(BaseSerializer):
-    
+
     show_capabilities = ['edit', 'delete']
-    
+
     class Meta:
         model = OAuth2Application
         fields = (
@@ -1181,8 +1181,8 @@ class OAuth2ApplicationSerializer(BaseSerializer):
             'skip_authorization': {
                 'label': _('Skip Authorization')
             },
-        }        
-        
+        }
+
     def to_representation(self, obj):
         ret = super(OAuth2ApplicationSerializer, self).to_representation(obj)
         request = self.context.get('request', None)
@@ -1191,7 +1191,7 @@ class OAuth2ApplicationSerializer(BaseSerializer):
         if obj.client_type == 'public':
             ret.pop('client_secret', None)
         return ret
-        
+
     def get_related(self, obj):
         res = super(OAuth2ApplicationSerializer, self).get_related(obj)
         res.update(dict(
@@ -4021,7 +4021,7 @@ class WorkflowJobTemplateNodeDetailSerializer(WorkflowJobTemplateNodeSerializer)
     Influence the api browser sample data to not include workflow_job_template
     when editing a WorkflowNode.
 
-    Note: I was not able to accomplish this trough the use of extra_kwargs.
+    Note: I was not able to accomplish this through the use of extra_kwargs.
     Maybe something to do with workflow_job_template being a relational field?
     '''
     def build_relational_field(self, field_name, relation_info):
@@ -5070,6 +5070,17 @@ class ActivityStreamSerializer(BaseSerializer):
                                     if fval is not None:
                                         job_template_item[field] = fval
                                 summary_fields['job_template'].append(job_template_item)
+                        if fk == 'workflow_job_template_node':
+                            summary_fields['workflow_job_template'] = []
+                            workflow_job_template_item = {}
+                            workflow_job_template_fields = SUMMARIZABLE_FK_FIELDS['workflow_job_template']
+                            workflow_job_template = getattr(thisItem, 'workflow_job_template', None)
+                            if workflow_job_template is not None:
+                                for field in workflow_job_template_fields:
+                                    fval = getattr(workflow_job_template, field, None)
+                                    if fval is not None:
+                                        workflow_job_template_item[field] = fval
+                                summary_fields['workflow_job_template'].append(workflow_job_template_item)
                         if fk == 'schedule':
                             unified_job_template = getattr(thisItem, 'unified_job_template', None)
                             if unified_job_template is not None:

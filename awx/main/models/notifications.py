@@ -461,31 +461,38 @@ class JobNotificationMixin(object):
 
         return (notification_subject, notification_body)
 
-    def send_notification_templates(self, status):
-        from awx.main.tasks import send_notifications  # avoid circular import
-        if status not in ['running', 'succeeded', 'failed']:
-            raise ValueError(_("status must be either running, succeeded or failed"))
+    # &&&&&& Placeholder for notification work (more commented placeholder code below)
+    # def build_notification_needs_approval_message(self):
+    #     return self._build_notification_message('pending')
 
+    def send_notification_templates(self, status_str):
+        from awx.main.tasks import send_notifications  # avoid circular import
+        # if status_str not in ['succeeded', 'failed', 'running', 'pending']:
+        #     raise ValueError(_("status_str must be either running, pending, succeeded or failed"))
         try:
             notification_templates = self.get_notification_templates()
         except Exception:
             logger.warn("No notification template defined for emitting notification")
-            return
+            notification_templates = None
+        if notification_templates:
+            if status_str == 'succeeded':
+                notification_template_type = 'success'
+            elif status_str == 'running':
+                notification_template_type = 'started'
+            # elif status_str == 'pending':
+            #     notification_template_type = 'needs_approval'
+            else:
+                notification_template_type = 'error'
+            all_notification_templates = set(notification_templates.get(notification_template_type, []))
+            if len(all_notification_templates):
+                try:
+                    (notification_subject, notification_body) = getattr(self, 'build_notification_%s_message' % status_str)()
+                except AttributeError:
+                    raise NotImplementedError("build_notification_%s_message() does not exist" % status_str)
 
-        if not notification_templates:
-            return
-
-        for nt in set(notification_templates.get(self.STATUS_TO_TEMPLATE_TYPE[status], [])):
-            try:
-                (notification_subject, notification_body) = self.build_notification_message(nt, status)
-            except AttributeError:
-                raise NotImplementedError("build_notification_message() does not exist" % status)
-
-            # Use kwargs to force late-binding
-            # https://stackoverflow.com/a/3431699/10669572
-            def send_it(local_nt=nt, local_subject=notification_subject, local_body=notification_body):
-                def _func():
-                    send_notifications.delay([local_nt.generate_notification(local_subject, local_body).id],
+                def send_it():
+                    send_notifications.delay([n.generate_notification(notification_subject, notification_body).id
+                                              for n in all_notification_templates],
                                              job_id=self.id)
                 return _func
             connection.on_commit(send_it())

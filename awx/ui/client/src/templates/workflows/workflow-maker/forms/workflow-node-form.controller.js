@@ -651,7 +651,7 @@ export default ['$scope', 'TemplatesService', 'JobTemplateModel', 'PromptService
             } else if($scope.activeTab === "inventory_syncs") {
                 return !$scope.inventoryNodeState.selectedTemplate;
             } else if ($scope.activeTab === "approval") {
-                return !($scope.approvalNodeState.name && $scope.approvalNodeState.name !== "");
+                return !($scope.approvalNodeState.name && $scope.approvalNodeState.name !== "") || $scope.workflow_approval.pauseTimeout.$error.min;
             } 
         };
 

@@ -112,7 +112,7 @@
             </div>
             <paginate base-path="inventory_sources" collection="wf_maker_inventory_sources" dataset="wf_maker_inventory_source_dataset" iterator="wf_maker_inventory_source" query-set="wf_maker_inventory_source_queryset" hide-view-per-page="true" max-visible-pages="5"></paginate>
         </div>
-        <div id="workflow-pause" ng-show="activeTab === 'approval'">
+        <form id="workflow_approval" name="workflow_approval" ng-show="activeTab === 'approval'">
             <div class="form-group Form-formGroup Form-formGroup--singleColumn">
                 <label for="pauseName" class="Form-inputLabelContainer">
                         <span class="Form-requiredAsterisk">*</span>
@@ -140,10 +140,11 @@
                     </a>
                 </label>
                 <div>
-                    <input type="number" value="0" min="0" ng-model="approvalNodeState.timeout" name="pauseTimeout" id="workflow_job_template_pauseTimeout" aw-spinner="pauseTimeout" integer />
+                    <input type="number" value="0" min=0 aw-min="0" ng-model="approvalNodeState.timeout" name="pauseTimeout" id="workflow_job_template_pauseTimeout" aw-spinner="pauseTimeout" integer />
+                    <div class="error" id="workflow_job_template_pauseTimeout-minmax-error" ng-show="workflow_approval.pauseTimeout.$error.min" translate>Please enter a number greater than or equal to 0.</div>
                 </div>
             </div>
-        </div>
+        </form>
         <div ng-if="selectedTemplate && jobNodeState.selectedTemplateInvalid">
             <div class="WorkflowMaker-invalidJobTemplateWarning">
                 <span class="fa fa-warning"></span>

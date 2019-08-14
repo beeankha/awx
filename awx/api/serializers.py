@@ -3632,6 +3632,12 @@ class WorkflowJobTemplateNodeSerializer(LaunchConfigurationBaseSerializer):
             pass
         return res
 
+    def get_summary_fields(self, obj):
+        summary_fields = super(WorkflowJobTemplateNodeSerializer, self).get_summary_fields(obj)
+        if isinstance(obj.unified_job_template, WorkflowApprovalTemplate):
+            summary_fields['unified_job_template']['timeout'] = obj.unified_job_template.timeout
+        return summary_fields
+
     def build_field(self, field_name, info, model_class, nested_depth):
         # have to special-case the field so that DRF will not automagically make it
         # read-only because it's a property on the model.
@@ -3722,6 +3728,12 @@ class WorkflowJobNodeSerializer(LaunchConfigurationBaseSerializer):
         if obj.workflow_job:
             res['workflow_job'] = self.reverse('api:workflow_job_detail', kwargs={'pk': obj.workflow_job.pk})
         return res
+
+    def get_summary_fields(self, obj):
+        summary_fields = super(WorkflowJobNodeSerializer, self).get_summary_fields(obj)
+        if isinstance(obj.job, WorkflowApproval):
+            summary_fields['job']['timed_out'] = obj.job.timed_out
+        return summary_fields
 
 
 class WorkflowJobNodeListSerializer(WorkflowJobNodeSerializer):

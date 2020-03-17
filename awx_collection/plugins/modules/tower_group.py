@@ -28,6 +28,12 @@ options:
         - The name to use for the group.
       required: True
       type: str
+    new_name:
+      description:
+        - A new name for this group (for renaming)
+      required: False
+      type: str
+      version_added: "3.7"
     description:
       description:
         - The description to use for the group.
@@ -41,18 +47,22 @@ options:
       description:
         - Variables to use for the group.
       type: dict
+    hosts:
+      description:
+        - The hosts associated with this group
+      required: False
+      type: list
+    groups:
+      description:
+        - The hosts associated with this group
+      required: False
+      type: list
     state:
       description:
         - Desired state of the resource.
       default: "present"
       choices: ["present", "absent"]
       type: str
-    new_name:
-      description:
-        - A new name for this group (for renaming)
-      required: False
-      type: str
-      version_added: "3.7"
     tower_oauthtoken:
       description:
         - The Tower OAuth token to use.
@@ -85,6 +95,8 @@ def main():
         description=dict(required=False),
         inventory=dict(required=True),
         variables=dict(type='dict', required=False),
+        hosts=dict(required=False, type="list", default=None),
+        groups=dict(required=False, type="list", default=None),
         state=dict(choices=['present', 'absent'], default='present'),
     )
 
@@ -98,9 +110,21 @@ def main():
     description = module.params.get('description')
     state = module.params.pop('state')
     variables = module.params.get('variables')
+    hosts = module.params.get('hosts')
+    groups = module.params.get('groups')
 
     # Attempt to look up the related items the user specified (these will fail the module if not found)
     inventory_id = module.resolve_name_to_id('inventories', inventory)
+    hosts_ids = None
+    if hosts is not None:
+        hosts_ids = []
+        for item in hosts:
+            hosts_ids.append( module.resolve_name_to_id('hosts', item) )
+    groups_ids = None
+    if groups is not None:
+        groups_ids = []
+        for item in groups:
+            groups_ids.append( module.resolve_name_to_id('groups', item) )
 
     # Attempt to look up the object based on the provided name and inventory ID
     group = module.get_one('groups', **{
@@ -125,7 +149,7 @@ def main():
         module.delete_if_needed(group)
     elif state == 'present':
         # If the state was present we can let the module build or update the existing group, this will return on its own
-        module.create_or_update_if_needed(group, group_fields, endpoint='groups', item_type='group')
+        module.create_or_update_if_needed(group, group_fields, endpoint='groups', item_type='group', associations={ 'hosts': hosts_ids, 'children': groups_ids,})
 
 
 if __name__ == '__main__':

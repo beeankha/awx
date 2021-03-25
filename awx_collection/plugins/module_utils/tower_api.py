@@ -262,7 +262,7 @@ class TowerAPIModule(TowerModule):
 
             parsed_collection_version = Version(self._COLLECTION_VERSION).version
             parsed_tower_version = Version(tower_version).version
-            if tower_type != 'AWX':
+            if tower_type == 'AWX':
                 collection_compare_ver = parsed_collection_version[0]
                 tower_compare_ver = parsed_tower_version[0]
             else:
